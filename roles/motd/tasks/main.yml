@@ -1,0 +1,8 @@
+---
+- name: Set /etc/motd content
+  copy:
+    dest: /etc/motd
+    content: "Ansible Managed by {{ motd.owner }}\n"
+    owner: root
+    group: root
+    mode: '0644'

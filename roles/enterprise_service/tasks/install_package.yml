@@ -1,0 +1,59 @@
+---
+- name: Install PostgreSQL on Debian/Ubuntu
+  apt:
+    name:
+      - "postgresql-{{ postgres_versions.Debian }}"
+      - "postgresql-contrib-{{ postgres_versions.Debian }}"
+    update_cache: yes
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Install PostgreSQL on RedHat/CentOS (try default package names)
+  yum:
+    name:
+      - postgresql-server
+      - postgresql
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Initialize PostgreSQL DB on CentOS (if setup tool exists)
+  command: /usr/bin/postgresql-setup initdb
+  args:
+    removes: /var/lib/pgsql/data/PG_VERSION
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version is defined
+
+- name: Start and enable postgresql (Debian)
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Start and enable postgresql (RedHat/CentOS)
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+  when: ansible_os_family == 'RedHat'
+
+- name: Check psql version (register)
+  command: psql --version
+  register: pg_ver
+  changed_when: false
+  ignore_errors: true
+
+- name: Create DB user
+  become_user: postgres
+  postgresql_user:
+    name: "{{ enterprise_service.db_user }}"
+    password: "{{ enterprise_service.db_pass }}"
+    state: present
+
+- name: Create DB
+  become_user: postgres
+  postgresql_db:
+    name: "{{ enterprise_service.db_name }}"
+    owner: "{{ enterprise_service.db_user }}"
+    state: present

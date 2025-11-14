@@ -1,0 +1,74 @@
+---
+- name: Create prometheus user
+  user:
+    name: prometheus
+    system: yes
+    shell: /sbin/nologin
+    create_home: no
+
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+  loop:
+    - /etc/prometheus
+    - /var/lib/prometheus
+
+- name: Download prometheus
+  get_url:
+    url: "https://github.com/prometheus/prometheus/releases/download/v2.52.0/prometheus-2.52.0.linux-amd64.tar.gz"
+    dest: /tmp/prom.tar.gz
+  ignore_errors: yes
+
+- name: Extract prometheus
+  unarchive:
+    src: /tmp/prom.tar.gz
+    dest: /opt
+    remote_src: yes
+  ignore_errors: yes
+
+- name: Copy prometheus binary if exists
+  copy:
+    src: /opt/prometheus-2.52.0.linux-amd64/prometheus
+    dest: /usr/local/bin/prometheus
+    mode: '0755'
+  ignore_errors: yes
+
+- name: Copy promtool if exists
+  copy:
+    src: /opt/prometheus-2.52.0.linux-amd64/promtool
+    dest: /usr/local/bin/promtool
+    mode: '0755'
+  ignore_errors: yes
+
+- name: Copy prometheus config template
+  template:
+    src: prometheus.yml
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+  ignore_errors: yes
+
+- name: Create systemd service for prometheus
+  copy:
+    dest: /etc/systemd/system/prometheus.service
+    content: |
+      [Unit]
+      Description=Prometheus
+      After=network.target
+
+      [Service]
+      User=prometheus
+      ExecStart=/usr/local/bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/var/lib/prometheus
+
+      [Install]
+      WantedBy=default.target
+  notify: restart_prometheus
+
+- name: Ensure prometheus started
+  systemd:
+    name: prometheus
+    state: started
+    enabled: yes

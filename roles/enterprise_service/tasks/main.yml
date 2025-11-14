@@ -1,0 +1,94 @@
+---
+- name: Ensure python3 package present
+  package:
+    name: python3
+    state: present
+
+- name: Include OS-specific install
+  include_tasks: install_package.yml
+- name: Install dependencies for adding repository
+  apt:
+    name:
+      - wget
+      - gnupg
+    state: present
+    update_cache: yes
+
+- name: Add PostgreSQL GPG key
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Add PostgreSQL repository
+  apt_repository:
+    repo: "deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+    state: present
+    filename: "pgdg.list"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install PostgreSQL
+  apt:
+    name:
+      - "postgresql-14"
+      - "postgresql-contrib-14"
+    state: present
+
+- name: Start PostgreSQL
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Create DB user
+  become_user: postgres
+  postgresql_user:
+    name: "{{ enterprise_service.db_user }}"
+    password: "{{ enterprise_service.db_pass }}"
+    state: present
+
+- name: Create DB
+  become_user: postgres
+  postgresql_db:
+    name: "{{ enterprise_service.db_name }}"
+    owner: "{{ enterprise_service.db_user }}"
+    state: present
+- name: Install dependencies for adding repository
+  apt:
+    name:
+      - wget
+      - gnupg
+      - lsb-release
+      - apt-transport-https
+    state: present
+    update_cache: yes
+
+- name: Add PostgreSQL GPG key
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Add PostgreSQL repository
+  apt_repository:
+    repo: "deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+    state: present
+    filename: "pgdg.list"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install PostgreSQL 14
+  apt:
+    name:
+      - postgresql-14
+      - postgresql-contrib-14
+    state: present
+
+- name: Ensure PostgreSQL is started
+  service:
+    name: postgresql
+    state: started
+    enabled: yes

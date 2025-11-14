@@ -1,0 +1,3 @@
+postgres_versions:
+  Debian: "{{ enterprise_service.version | default('14') }}"
+  RedHat: "{{ enterprise_service.version | default('14') }}"

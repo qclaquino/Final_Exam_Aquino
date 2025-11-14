@@ -1,0 +1,22 @@
+---
+- name: Try to install grafana via apt (Debian)
+  apt:
+    name: grafana
+    state: present
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+  ignore_errors: yes
+
+- name: Try to install grafana via yum (RedHat)
+  yum:
+    name: grafana
+    state: present
+  when: ansible_os_family == 'RedHat'
+  ignore_errors: yes
+
+- name: Ensure grafana-server service started
+  service:
+    name: grafana-server
+    state: started
+    enabled: yes
+  ignore_errors: yes

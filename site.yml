@@ -1,0 +1,24 @@
+---
+- name: Apply common MOTD
+  hosts: all
+  become: true
+  vars_files:
+    - config.yaml
+  roles:
+    - motd
+
+- name: Install enterprise service (PostgreSQL) on db_servers
+  hosts: db_servers
+  become: true
+  vars_files:
+    - config.yaml
+  roles:
+    - enterprise_service
+
+- name: Install monitoring stack (prometheus/grafana/node_exporter)
+  hosts: monitoring
+  become: true
+  vars_files:
+    - config.yaml
+  roles:
+    - monitoring

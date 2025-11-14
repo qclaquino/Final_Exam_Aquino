@@ -1,0 +1,20 @@
+enterprise_service:
+  name: postgresql
+  version: "14"
+  db_user: examuser
+  db_pass: examPass123
+  db_name: examdb
+
+monitoring:
+  prometheus:
+    host: prometheus
+    port: 9090
+  grafana:
+    host: grafana
+    port: 3000
+  node_exporter:
+    port: 9100
+motd:
+  owner: "CHRISTOPHER_LANCE_AQUINO"   # <-- this will appear in MOTD
+
+use_containers: false    # set true to deploy via Docker Compose instead of packages
